@@ -3,49 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research Hub | Industry Reports</title>
+    <title>行研精选 | 深度行业研究报告</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
 </head>
 <body>
     <div class="container">
+        <!-- 头部 -->
         <header>
-            <h1>📈 Research Hub</h1>
-            <p class="subtitle">Professional Industry Analysis Reports</p>
+            <h1>📈 行研精选</h1>
+            <p class="subtitle">专业深度 · 核心观点 · 每周更新</p>
             <div class="header-info">
                 <span id="current-date"></span>
-                <button onclick="window.location.href='archive.html'">View Archive</button>
+                <button onclick="window.location.href='archive.html'">查看往期</button>
             </div>
         </header>
 
+        <!-- 主要内容 -->
         <main>
             <section class="intro">
-                <h2>Weekly Selected Reports</h2>
-                <p>Three deep industry research reports with key insights.</p>
+                <h2>🎯 本周精选报告</h2>
+                <p>精选三篇深度行业研究报告，提炼核心观点，提供专业解读。</p>
             </section>
 
+            <!-- 文章容器 -->
             <div id="articles-container">
-                <p>Loading reports...</p>
+                <p>正在加载报告...</p>
             </div>
 
+            <!-- 使用提示 -->
             <div class="tips">
                 <div class="tip">
-                    <h4>💡 How to Use</h4>
-                    <p>Click download button to get full PDF report.</p>
+                    <h4>💡 使用提示</h4>
+                    <p>点击下载按钮获取完整PDF报告。</p>
                 </div>
                 <div class="tip">
-                    <h4>🔄 Updates</h4>
-                    <p>New reports every Friday.</p>
+                    <h4>🔄 更新频率</h4>
+                    <p>每周五更新最新行业研究报告。</p>
+                </div>
+                <div class="tip">
+                    <h4>📱 移动访问</h4>
+                    <p>支持手机和平板电脑访问。</p>
                 </div>
             </div>
         </main>
 
+        <!-- 页脚 -->
         <footer>
-            <p>© <span id="current-year"></span> Research Hub</p>
-            <p class="disclaimer">For research purpose only.</p>
+            <p>© <span id="current-year"></span> 行研精选 · 让研究更有价值</p>
+            <p class="disclaimer">报告内容仅供参考，不构成投资建议。市场有风险，投资需谨慎。</p>
         </footer>
     </div>
 
+    <!-- JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
