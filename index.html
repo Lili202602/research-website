@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Hub | Industry Reports</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Research Hub</h1>
+            <p class="subtitle">Professional Industry Analysis Reports</p>
+            <div class="header-info">
+                <span id="current-date"></span>
+                <button onclick="window.location.href='archive.html'">View Archive</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="intro">
+                <h2>Weekly Selected Reports</h2>
+                <p>Three deep industry research reports with key insights.</p>
+            </section>
+
+            <div id="articles-container">
+                <p>Loading reports...</p>
+            </div>
+
+            <div class="tips">
+                <div class="tip">
+                    <h4>💡 How to Use</h4>
+                    <p>Click download button to get full PDF report.</p>
+                </div>
+                <div class="tip">
+                    <h4>🔄 Updates</h4>
+                    <p>New reports every Friday.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>© <span id="current-year"></span> Research Hub</p>
+            <p class="disclaimer">For research purpose only.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
