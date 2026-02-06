@@ -128,14 +128,25 @@ def deepseek_extract_json(pdf_text: str, *, api_key: str) -> ExtractedPost:
         "请从下面的 PDF 文本中提取信息，并严格以 JSON 对象输出。\n\n"
         "要求：\n"
         "1) title：报告/文章标题（中文优先，尽量完整）\n"
-        "2) summary：核心摘要（5-10 条要点，面向快速阅读，允许使用换行或条目）\n"
+        "2) summary：核心摘要（5-10 条要点，必须严格遵守以下格式）：\n"
+        "   每条要点格式：【**总结词/短句**】：紧接着展开 1-2 句具体的细节描述。\n"
+        "   示例：\n"
+        "   【**物流降本**】：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。\n"
+        "   【**合规风险**】：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。\n"
+        "   注意：总结词必须用 **加粗标记** 包裹，每条要点独立一行，用换行分隔。\n"
         "3) expert_commentary：专家点评（资深供应链顾问视角，聚焦供应链管理、物流技术、贸易合规或 AI/数字化在供应链中的应用，"
-        "结合报告结论说明对行业从业者在决策、运营优化和风险管理上的具体影响，并给出可执行建议，300-600 字）\n\n"
+        "结合报告结论说明对行业从业者在决策、运营优化和风险管理上的具体影响，并给出可执行建议，300-600 字）：\n"
+        "   必须严格遵守以下格式：\n"
+        "   每条洞察格式：【**总结词/短句**】：紧接着展开 1-2 句具体的细节描述。\n"
+        "   示例：\n"
+        "   【**物流降本**】：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。\n"
+        "   【**合规风险**】：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。\n"
+        "   注意：总结词必须用 **加粗标记** 包裹，每条洞察独立一段，用换行分隔。\n\n"
         "输出 JSON 示例：\n"
         "{\n"
         '  "title": "...",\n'
-        '  "summary": "...",\n'
-        '  "expert_commentary": "..."\n'
+        '  "summary": "【**总结词1**】：描述1\\n【**总结词2**】：描述2\\n...",\n'
+        '  "expert_commentary": "【**洞察1**】：描述1\\n\\n【**洞察2**】：描述2\\n\\n..."\n'
         "}\n\n"
         "PDF 文本如下（可能不完整）：\n"
         "-----\n"
@@ -229,8 +240,9 @@ def save_json(path: Path, data: Any) -> None:
 def generate_post_html(post: ExtractedPost, *, post_title: str, date_str: str, pdf_rel_url: str) -> str:
     # 内嵌样式：即使单页也美观
     safe_title = html_escape(post_title)
-    summary_html = nl2br(html_escape(post.summary))
-    expert_html = nl2br(html_escape(post.expert_commentary))
+    # 处理 Markdown 加粗标记，然后转行
+    summary_html = nl2br(markdown_bold_to_html(post.summary))
+    expert_html = nl2br(markdown_bold_to_html(post.expert_commentary))
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -470,13 +482,55 @@ def strip_html(s: str) -> str:
     return re.sub(r"<[^>]+>", "", s or "").strip()
 
 
+def markdown_bold_to_html(text: str) -> str:
+    """
+    将 Markdown 格式的加粗 **文本** 转换为 HTML <strong>文本</strong>
+    策略：先提取加粗内容并转义，替换为占位符，转义整行，再替换占位符为 <strong> 标签
+    """
+    # 使用占位符避免转义冲突
+    placeholders = {}
+    placeholder_counter = [0]
+    
+    def extract_bold(match):
+        content = match.group(1)
+        # 对加粗内容进行 HTML 转义
+        escaped_content = html_escape(content)
+        placeholder = f"__BOLD_PLACEHOLDER_{placeholder_counter[0]}__"
+        placeholder_counter[0] += 1
+        placeholders[placeholder] = escaped_content
+        return placeholder
+    
+    # 匹配 **文本** 模式（非贪婪，避免匹配嵌套）
+    pattern = r'\*\*([^*]+?)\*\*'
+    # 先用占位符替换所有加粗标记
+    text_with_placeholders = re.sub(pattern, extract_bold, text)
+    
+    # 转义整行的其他内容
+    escaped_text = html_escape(text_with_placeholders)
+    
+    # 将占位符替换为 <strong> 标签
+    result = escaped_text
+    for placeholder, content in placeholders.items():
+        result = result.replace(placeholder, f'<strong>{content}</strong>')
+    
+    return result
+
+
 def render_summary_as_html_list(summary: str) -> str:
-    # summary 可能是多行或条目文本：渲染成 <br> 兼容现有样式
+    # summary 可能是多行或条目文本：在页面中渲染为一组洞察条目
+    # 处理 Markdown 加粗标记（**文本** -> <strong>文本</strong>），并为每条外层包裹 .insight-item
     lines = [ln.strip() for ln in summary.splitlines() if ln.strip()]
     if not lines:
-        return html_escape(summary)
-    # 若包含明显编号/短横线，不强行加编号；统一用 <br>
-    return "<br>".join(html_escape(ln) for ln in lines)
+        # 即使只有一行，也要处理加粗标记
+        content = markdown_bold_to_html(summary)
+        return f'<div class="insight-item">{content}</div>'
+    
+    # 对每一行处理加粗标记，并包裹为独立的洞察条目
+    processed_lines = [
+        f'<div class="insight-item">{markdown_bold_to_html(ln)}</div>'
+        for ln in lines
+    ]
+    return "".join(processed_lines)
 
 
 def main() -> int:
