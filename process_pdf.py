@@ -20,6 +20,7 @@ DATA_DIR = ROOT / "data"
 ARTICLES_JSON_PATH = DATA_DIR / "articles.json"
 PROCESSED_LEDGER_PATH = DATA_DIR / "processed_pdfs.json"
 INDEX_HTML_PATH = ROOT / "index.html"
+ARCHIVE_HTML_PATH = ROOT / "archive.html"
 
 
 DEEPSEEK_CHAT_COMPLETIONS_URL = "https://api.deepseek.com/chat/completions"
@@ -38,6 +39,62 @@ def ensure_dirs() -> None:
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     PUBLISHED_PDFS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def ensure_archive_html_exists() -> None:
+    """
+    如果 archive.html 不存在，则创建一个与首页风格一致、用于展示全部历史报告的页面。
+    页面同样依赖 data/articles.json 与 script.js 进行渲染。
+    """
+    if ARCHIVE_HTML_PATH.exists():
+        return
+
+    html = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>行研精选 · 往期报告归档 | Lili's Supply Chain AI Lab</title>
+    <link rel="stylesheet" href="style.css?v=20240321">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 行研精选 · 往期报告</h1>
+            <p class="subtitle">Lili's Supply Chain AI Lab · 历史报告归档</p>
+            <div class="header-info">
+                <span id="current-date"></span>
+                <button onclick="window.location.href='index.html'">返回首页</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="intro">
+                <h2>📚 全部历史报告</h2>
+                <p>这里展示所有已发布的研究报告，按时间倒序排列。建议结合行业节奏、技术变迁与供应链变化进行纵向对比阅读。</p>
+            </section>
+
+            <div id="articles-container">
+                <p>正在加载历史报告...</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>© <span id="current-year"></span> Lili's Supply Chain AI Lab · Research & Insights</p>
+            <p class="disclaimer">内容仅供学习与研究参考，不构成任何投资、法律或合规建议。业务决策前请结合自身情况审慎评估。</p>
+        </footer>
+    </div>
+
+    <script src="script.js?v=20240321"></script>
+</body>
+</html>
+"""
+    ARCHIVE_HTML_PATH.write_text(html, encoding="utf-8")
 
 
 def read_pdf_text(pdf_path: Path, max_pages: int = 10, max_chars: int = 60_000) -> str:
@@ -64,8 +121,9 @@ def deepseek_extract_json(pdf_text: str, *, api_key: str) -> ExtractedPost:
         raise RuntimeError("缺少环境变量 DEEPSEEK_API_KEY")
 
     system = (
-        "你是供应链领域的资深行业研究解读助手。"
-        "你将从用户提供的 PDF 文本中提取关键信息，并面向供应链从业者给出专业点评。"
+        "你是一名深度理解供应链管理、物流技术、全球贸易合规以及 AI 在供应链应用的资深供应链顾问。"
+        "你将从用户提供的 PDF 文本中提取关键信息，并面向供应链从业者给出具有可操作性的专业点评，"
+        "特别关注对供应链规划、采购策略、库存与产能布局、物流网络设计、风险管理和合规要求的影响。"
         "必须仅输出 JSON（不要输出多余文字），并确保字段齐全。"
     )
 
@@ -74,7 +132,8 @@ def deepseek_extract_json(pdf_text: str, *, api_key: str) -> ExtractedPost:
         "要求：\n"
         "1) title：报告/文章标题（中文优先，尽量完整）\n"
         "2) summary：核心摘要（5-10 条要点，面向快速阅读，允许使用换行或条目）\n"
-        "3) expert_commentary：专家点评（供应链从业者视角，强调产业链/采购/产能/渠道/风险等，300-600 字）\n\n"
+        "3) expert_commentary：专家点评（资深供应链顾问视角，聚焦供应链管理、物流技术、贸易合规或 AI/数字化在供应链中的应用，"
+        "结合报告结论说明对行业从业者在决策、运营优化和风险管理上的具体影响，并给出可执行建议，300-600 字）\n\n"
         "输出 JSON 示例：\n"
         "{\n"
         '  "title": "...",\n'
@@ -425,6 +484,7 @@ def render_summary_as_html_list(summary: str) -> str:
 
 def main() -> int:
     ensure_dirs()
+    ensure_archive_html_exists()
 
     api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
 

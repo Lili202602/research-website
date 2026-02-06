@@ -107,8 +107,12 @@ function displayArticles(articles) {
     // 清空容器
     container.innerHTML = '';
     
+    // 首页只展示最新 3 篇；archive.html 展示全部
+    const isArchivePage = window.location.pathname.includes('archive');
+    const listToRender = isArchivePage ? articles : articles.slice(0, 3);
+    
     // 生成文章HTML
-    articles.forEach((article, index) => {
+    listToRender.forEach((article, index) => {
         const articleHTML = `
             <div class="article-card">
                 <div class="article-header">
