@@ -113,7 +113,11 @@ function displayArticles(articles) {
             <div class="article-card">
                 <div class="article-header">
                     <div class="article-number">${index + 1}</div>
-                    <h3 class="article-title">${article.title}</h3>
+                    <h3 class="article-title">${
+                        article.postUrl
+                            ? `<a href="${article.postUrl}" style="color: inherit; text-decoration: none;">${article.title}</a>`
+                            : `${article.title}`
+                    }</h3>
                     <div class="article-date">📅 ${article.date}</div>
                 </div>
                 
