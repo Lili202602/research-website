@@ -86,11 +86,10 @@ button:hover {
     font-size: 1.1rem;
 }
 
-/* ===== 文章容器 - 核心修改部分 ===== */
-/* 桌面端：默认上下堆叠（单列网格） */
+/* ===== 文章容器 - 核心：桌面端上下堆叠 ===== */
 #articles-container {
     display: grid;
-    grid-template-columns: 1fr; /* 关键：确保单列堆叠 */
+    grid-template-columns: 1fr; /* 关键：强制单列堆叠 */
     gap: 30px;
     margin-bottom: 50px;
 }
@@ -101,7 +100,7 @@ button:hover {
     padding: 25px;
     box-shadow: 0 3px 15px rgba(0,0,0,0.1);
     border: 1px solid #eee;
-    width: 100%; /* 确保占满网格宽度 */
+    width: 100%;
 }
 
 .article-header {
@@ -193,34 +192,89 @@ footer {
     margin-top: 10px;
 }
 
-/* ===== 响应式设计 - 核心修改部分 ===== */
-/* 移动端：改为横向滚动布局 */
+/* ===== 响应式设计 - 核心：移动端横向滚动 & 字体调小 ===== */
 @media (max-width: 768px) {
+    /* 整体容器和头部字体调小 */
     .container {
         padding: 15px;
     }
     
     header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem; /* 调小 */
+    }
+    
+    .subtitle {
+        font-size: 1rem; /* 调小 */
+    }
+    
+    .intro h2 {
+        font-size: 1.6rem; /* 调小 */
+    }
+    
+    .intro p {
+        font-size: 1rem; /* 调小 */
     }
     
     /* 覆盖桌面端布局，改为横向滚动 */
     #articles-container {
-        display: flex; /* 改为Flex布局 */
+        display: flex;
         flex-direction: row;
-        overflow-x: auto; /* 允许横向滚动 */
-        scrollbar-width: thin; /* Firefox */
-        -webkit-overflow-scrolling: touch; /* 移动端顺滑滚动 */
+        overflow-x: auto;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
         padding-bottom: 15px;
-        grid-template-columns: unset; /* 清除grid设置 */
-        gap: 0; /* 清除grid的gap，用margin代替 */
+        grid-template-columns: unset;
+        gap: 0;
+        margin-bottom: 30px;
     }
     
     .article-card {
-        min-width: 85vw; /* 卡片宽度为视口85%，一次基本显示一张 */
+        min-width: 85vw;
         max-width: 400px;
-        flex-shrink: 0; /* 防止卡片被挤压 */
-        margin-right: 20px; /* 卡片间间距 */
+        flex-shrink: 0;
+        margin-right: 20px;
+        padding: 20px; /* 内边距也稍调小 */
+    }
+    
+    /* 文章卡片内字体调小 */
+    .article-title {
+        font-size: 1.2rem; /* 调小 */
+    }
+    
+    .article-date {
+        font-size: 0.85rem; /* 调小 */
+    }
+    
+    .section-title {
+        font-size: 1rem; /* 调小 */
+    }
+    
+    .section-content {
+        font-size: 0.95rem; /* 调小 */
+        padding: 12px;
+        line-height: 1.6;
+    }
+    
+    .download-btn {
+        padding: 10px 20px; /* 按钮也调小 */
+        font-size: 0.95rem;
+    }
+    
+    /* 提示区域和页脚字体调小 */
+    .tip h4 {
+        font-size: 1.05rem;
+    }
+    
+    .tip p {
+        font-size: 0.95rem;
+    }
+    
+    footer {
+        font-size: 0.9rem;
+    }
+    
+    .disclaimer {
+        font-size: 0.8rem;
     }
     
     /* 美化移动端横向滚动条 */
@@ -242,5 +296,11 @@ footer {
     
     .header-info {
         flex-direction: column;
+    }
+    
+    /* 移动端按钮调小 */
+    button {
+        padding: 8px 16px;
+        font-size: 0.95rem;
     }
 }
