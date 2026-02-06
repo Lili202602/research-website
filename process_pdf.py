@@ -46,9 +46,6 @@ def ensure_archive_html_exists() -> None:
     如果 archive.html 不存在，则创建一个与首页风格一致、用于展示全部历史报告的页面。
     页面同样依赖 data/articles.json 与 script.js 进行渲染。
     """
-    if ARCHIVE_HTML_PATH.exists():
-        return
-
     html = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
