@@ -111,10 +111,38 @@ function displayArticles(articles) {
     const isArchivePage = window.location.pathname.includes('archive');
     const listToRender = isArchivePage ? articles : articles.slice(0, 3);
     
+    // 保存全局数据（用于搜索）
+    if (isArchivePage && allArticlesData.length === 0) {
+        allArticlesData = articles;
+    }
+    
     // 生成文章HTML
     listToRender.forEach((article, index) => {
+        // 生成标签HTML
+        let tagsHTML = '';
+        if (article.tags && Array.isArray(article.tags) && article.tags.length > 0) {
+            tagsHTML = `
+                <div class="article-tags">
+                    ${article.tags.map(tag => `<span class="tag-pill">${tag}</span>`).join('')}
+                </div>
+            `;
+        }
+        
+        // 为每篇文章生成不同的渐变色
+        const gradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+        ];
+        const gradient = gradients[index % gradients.length];
+        
         const articleHTML = `
             <div class="article-card">
+                <div class="article-cover" style="background: ${gradient};"></div>
+                
                 <div class="article-header">
                     <div class="article-number">${index + 1}</div>
                     <h3 class="article-title">${
@@ -123,6 +151,7 @@ function displayArticles(articles) {
                             : `${article.title}`
                     }</h3>
                     <div class="article-date">📅 ${article.date}</div>
+                    ${tagsHTML}
                 </div>
                 
                 <div class="section">
@@ -132,7 +161,7 @@ function displayArticles(articles) {
                 
                 <div class="section">
                     <h4 class="section-title">💬 专业点评</h4>
-                    <div class="section-content">${article.comments || '暂无专业点评'}</div>
+                    <div class="expert-comment">${article.comments || '暂无专业点评'}</div>
                 </div>
                 
                 <a href="${article.pdfUrl || '#'}" class="download-btn" target="_blank" rel="noopener noreferrer">
@@ -196,6 +225,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 加载文章数据
     loadArticles();
     
+    // 初始化搜索功能（仅在归档页面）
+    if (window.location.pathname.includes('archive')) {
+        initializeSearch();
+    }
+    
     // 添加简单的访问统计
     try {
         const visitCount = localStorage.getItem('visitCount') || 0;
@@ -225,8 +259,113 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('网站初始化完成 ✅');
 });
 
+// 全局变量存储所有文章数据
+let allArticlesData = [];
+
+// 初始化搜索功能
+function initializeSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    
+    console.log('初始化搜索功能...');
+    
+    // 实时搜索（输入时触发）
+    searchInput.addEventListener('input', function(e) {
+        const keyword = e.target.value.trim();
+        filterArticles(keyword);
+    });
+    
+    // 回车键搜索
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const keyword = e.target.value.trim();
+            filterArticles(keyword);
+        }
+    });
+}
+
+// 筛选文章
+function filterArticles(keyword) {
+    const container = document.getElementById('articles-container');
+    const resultsInfo = document.getElementById('search-results-info');
+    
+    if (!container || allArticlesData.length === 0) return;
+    
+    // 如果关键词为空，显示所有文章
+    if (!keyword) {
+        displayArticles(allArticlesData);
+        resultsInfo.textContent = '';
+        resultsInfo.classList.remove('active');
+        return;
+    }
+    
+    // 转换为小写进行不区分大小写的搜索
+    const lowerKeyword = keyword.toLowerCase();
+    
+    // 筛选匹配的文章
+    const filteredArticles = allArticlesData.filter(article => {
+        // 搜索标题
+        const titleMatch = article.title && article.title.toLowerCase().includes(lowerKeyword);
+        
+        // 搜索标签
+        const tagsMatch = article.tags && Array.isArray(article.tags) && 
+            article.tags.some(tag => tag.toLowerCase().includes(lowerKeyword));
+        
+        // 搜索核心观点（去除HTML标签后搜索）
+        const viewpointsText = article.coreViewpoints ? 
+            article.coreViewpoints.replace(/<[^>]+>/g, '').toLowerCase() : '';
+        const viewpointsMatch = viewpointsText.includes(lowerKeyword);
+        
+        // 搜索专业点评（去除HTML标签后搜索）
+        const commentsText = article.comments ? 
+            article.comments.replace(/<[^>]+>/g, '').toLowerCase() : '';
+        const commentsMatch = commentsText.includes(lowerKeyword);
+        
+        return titleMatch || tagsMatch || viewpointsMatch || commentsMatch;
+    });
+    
+    console.log(`搜索关键词: "${keyword}", 找到 ${filteredArticles.length} 篇报告`);
+    
+    // 显示筛选结果
+    if (filteredArticles.length > 0) {
+        displayArticles(filteredArticles);
+        resultsInfo.textContent = `找到 ${filteredArticles.length} 篇相关报告`;
+        resultsInfo.classList.add('active');
+    } else {
+        // 显示无结果提示
+        container.innerHTML = `
+            <div class="no-results">
+                <h3>😔 未找到相关报告</h3>
+                <p>没有找到包含 "<strong>${keyword}</strong>" 的报告</p>
+                <button class="clear-search-btn" onclick="clearSearch()">清除搜索</button>
+            </div>
+        `;
+        resultsInfo.textContent = '未找到匹配的报告';
+        resultsInfo.classList.add('active');
+    }
+}
+
+// 清除搜索
+function clearSearch() {
+    const searchInput = document.getElementById('search-input');
+    const resultsInfo = document.getElementById('search-results-info');
+    
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    
+    if (resultsInfo) {
+        resultsInfo.textContent = '';
+        resultsInfo.classList.remove('active');
+    }
+    
+    displayArticles(allArticlesData);
+}
+
 // 导出函数供全局使用（如果需要）
 window.reloadArticles = loadArticles;
 window.refreshPage = function() {
     location.reload(true);
 };
+window.clearSearch = clearSearch;

@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: "Inter", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    git push    font-family: "Inter", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
     font-size: 16px;
     line-height: 1.7;
@@ -25,24 +25,27 @@ body {
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
 }
 
-/* 头部样式 */
+/* 头部样式 - 深蓝色渐变背景条 */
 header {
     text-align: left;
-    margin-bottom: 32px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid #e5e7eb;
+    margin: -32px -38px 32px -38px;
+    padding: 28px 38px 24px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #2563eb 100%);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 4px 20px rgba(30, 58, 138, 0.15);
 }
 
 header h1 {
     font-size: 2.2rem;
-    color: #111827;
+    color: #ffffff;
     margin-bottom: 8px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .subtitle {
-    color: #6b7280;
+    color: #e0e7ff;
     font-size: 0.98rem;
     margin-bottom: 18px;
     letter-spacing: 0.08em;
@@ -59,12 +62,16 @@ header h1 {
 
 #current-date {
     font-weight: bold;
-    color: #2563eb;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 14px;
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
 }
 
 button {
-    background: #111827;
-    color: #f9fafb;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1e3a8a;
     border: none;
     padding: 9px 18px;
     border-radius: 999px;
@@ -72,10 +79,14 @@ button {
     font-size: 0.95rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 button:hover {
-    background: #030712;
+    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
 }
 
 /* 主要内容 */
@@ -95,6 +106,95 @@ button:hover {
     font-size: 0.98rem;
 }
 
+/* 搜索框样式 */
+.search-container {
+    margin: 24px 0 32px;
+    position: relative;
+}
+
+.search-box {
+    width: 100%;
+    padding: 14px 50px 14px 20px;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #1f2933;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.search-box:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+    background: #fafbff;
+}
+
+.search-box::placeholder {
+    color: #9ca3af;
+}
+
+.search-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.search-results-info {
+    margin-top: 12px;
+    color: #6b7280;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.search-results-info.active {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+/* 搜索无结果状态 */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.no-results h3 {
+    font-size: 1.5rem;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.no-results p {
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.clear-search-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.clear-search-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* ===== 文章容器 - 核心：桌面端上下堆叠 ===== */
 #articles-container {
     display: grid;
@@ -110,6 +210,36 @@ button:hover {
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
     border: 1px solid #e5e7eb;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 封面占位图 - 16:9 渐变色块 */
+.article-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.article-cover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 
 .article-header {
@@ -125,6 +255,31 @@ button:hover {
 .article-date {
     color: #6b7280;
     font-size: 0.9rem;
+}
+
+/* 彩色行业标签样式 */
+.article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tag-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #f3e8ff;
+    color: #7c3aed;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+}
+
+.tag-pill:hover {
+    background: #e9d5ff;
+    transform: translateY(-1px);
 }
 
 .section {
@@ -175,6 +330,44 @@ button:hover {
 
 .section-content .insight-item strong {
     color: #2c3e50; /* 深蓝色总结词 */
+}
+
+/* 专家点评高亮样式 */
+.expert-comment {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #3b82f6;
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+    line-height: 1.7;
+}
+
+.expert-comment .insight-item {
+    position: relative;
+    margin-bottom: 12px;
+    padding-left: 18px;
+    color: #555;
+}
+
+.expert-comment .insight-item:last-child {
+    margin-bottom: 0;
+}
+
+.expert-comment .insight-item::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: #3b82f6;
+    position: absolute;
+    left: 4px;
+    top: 0.8em;
+}
+
+.expert-comment .insight-item strong {
+    color: #1e40af;
+    font-weight: 700;
 }
 
 .download-btn {
@@ -234,22 +427,31 @@ footer {
     /* 整体容器和头部字体调小 */
     .container {
         padding: 15px;
+        width: 95%;
+        margin: 0 auto;
+    }
+    
+    /* 头部适配移动端 */
+    header {
+        margin: -15px -15px 20px -15px;
+        padding: 20px 15px 18px;
+        border-radius: 18px 18px 0 0;
     }
     
     header h1 {
-        font-size: 1.8rem; /* 调小 */
+        font-size: 1.5rem; /* 调小 */
     }
     
     .subtitle {
-        font-size: 1rem; /* 调小 */
+        font-size: 0.85rem; /* 调小 */
     }
     
     .intro h2 {
-        font-size: 1.6rem; /* 调小 */
+        font-size: 1.4rem; /* 调小 */
     }
     
     .intro p {
-        font-size: 1rem; /* 调小 */
+        font-size: 0.95rem; /* 调小 */
     }
     
     /* 覆盖桌面端布局，改为横向滚动 */
@@ -270,12 +472,12 @@ footer {
         max-width: 400px;
         flex-shrink: 0;
         margin-right: 20px;
-        padding: 20px; /* 内边距也稍调小 */
+        padding: 18px; /* 内边距也稍调小 */
     }
     
     /* 文章卡片内字体调小 */
     .article-title {
-        font-size: 1.2rem; /* 调小 */
+        font-size: 1.15rem; /* 调小 */
     }
     
     .article-date {
@@ -287,14 +489,19 @@ footer {
     }
     
     .section-content {
-        font-size: 0.95rem; /* 调小 */
+        font-size: 0.9rem; /* 调小 */
         padding: 12px;
         line-height: 1.6;
     }
     
+    .expert-comment {
+        font-size: 0.9rem;
+        padding: 12px 14px;
+    }
+    
     .download-btn {
         padding: 10px 20px; /* 按钮也调小 */
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
     
     /* 提示区域和页脚字体调小 */
@@ -303,11 +510,11 @@ footer {
     }
     
     .tip p {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
     
     footer {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     
     .disclaimer {
@@ -333,11 +540,46 @@ footer {
     
     .header-info {
         flex-direction: column;
+        gap: 12px;
     }
     
     /* 移动端按钮调小 */
     button {
         padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    #current-date {
+        padding: 5px 12px;
+        font-size: 0.9rem;
+    }
+    
+    /* 标签在移动端调小 */
+    .tag-pill {
+        font-size: 0.8rem;
+        padding: 5px 12px;
+    }
+    
+    /* 搜索框移动端适配 */
+    .search-box {
+        padding: 12px 45px 12px 16px;
         font-size: 0.95rem;
+    }
+    
+    .search-icon {
+        right: 14px;
+        font-size: 1.1rem;
+    }
+    
+    .search-results-info {
+        font-size: 0.85rem;
+    }
+    
+    .no-results h3 {
+        font-size: 1.3rem;
+    }
+    
+    .no-results p {
+        font-size: 0.9rem;
     }
 }

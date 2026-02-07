@@ -32,6 +32,7 @@ class ExtractedPost:
     title: str
     summary: str
     expert_commentary: str
+    tags: List[str]  # 新增：行业标签
 
 
 def ensure_dirs() -> None:
@@ -136,17 +137,21 @@ def deepseek_extract_json(pdf_text: str, *, api_key: str) -> ExtractedPost:
         "   注意：总结词必须用 **加粗标记** 包裹，每条要点独立一行，用换行分隔。\n"
         "3) expert_commentary：专家点评（资深供应链顾问视角，聚焦供应链管理、物流技术、贸易合规或 AI/数字化在供应链中的应用，"
         "结合报告结论说明对行业从业者在决策、运营优化和风险管理上的具体影响，并给出可执行建议，300-600 字）：\n"
+        "   **要求深度分析**：必须包含具体数据引用、行业对比、供应链各环节影响分析（上游/中游/下游）、风险评估和可执行建议。\n"
+        "   避免泛泛而谈，必须结合报告中的具体数据和案例进行深入解读。\n"
         "   必须严格遵守以下格式：\n"
-        "   每条洞察格式：【**总结词/短句**】：紧接着展开 1-2 句具体的细节描述。\n"
+        "   每条洞察格式：【**总结词/短句**】：紧接着展开 2-3 句具体的细节描述，包含数据支撑。\n"
         "   示例：\n"
-        "   【**物流降本**】：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。\n"
-        "   【**合规风险**】：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。\n"
-        "   注意：总结词必须用 **加粗标记** 包裹，每条洞察独立一段，用换行分隔。\n\n"
+        "   【**物流降本**】：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。报告数据显示，该技术在试点城市已实现单票成本从 8.5 元降至 7.2 元，ROI 周期约 18 个月。\n"
+        "   【**合规风险**】：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。建议企业提前 6 个月完成供应商审核，并建立双源采购策略以降低断供风险。\n"
+        "   注意：总结词必须用 **加粗标记** 包裹，每条洞察独立一段，用换行分隔。\n"
+        "4) tags：提取 2 个最相关的行业标签（中文，3-6 字，例如：供应链金融、智能物流、跨境电商、新能源汽车、半导体制造等）\n\n"
         "输出 JSON 示例：\n"
         "{\n"
         '  "title": "...",\n'
         '  "summary": "【**总结词1**】：描述1\\n【**总结词2**】：描述2\\n...",\n'
-        '  "expert_commentary": "【**洞察1**】：描述1\\n\\n【**洞察2**】：描述2\\n\\n..."\n'
+        '  "expert_commentary": "【**洞察1**】：描述1（含数据）\\n\\n【**洞察2**】：描述2（含数据）\\n\\n...",\n'
+        '  "tags": ["标签1", "标签2"]\n'
         "}\n\n"
         "PDF 文本如下（可能不完整）：\n"
         "-----\n"
@@ -197,11 +202,17 @@ def deepseek_extract_json(pdf_text: str, *, api_key: str) -> ExtractedPost:
     title = str(obj.get("title", "")).strip()
     summary = str(obj.get("summary", "")).strip()
     expert = str(obj.get("expert_commentary", "")).strip()
-
+    tags = obj.get("tags", [])
+    
+    # 确保 tags 是列表且包含 2 个标签
+    if not isinstance(tags, list):
+        tags = []
+    tags = [str(t).strip() for t in tags if str(t).strip()][:2]  # 最多取 2 个
+    
     if not title or not summary or not expert:
         raise RuntimeError(f"DeepSeek JSON 字段缺失：{obj}")
 
-    return ExtractedPost(title=title, summary=summary, expert_commentary=expert)
+    return ExtractedPost(title=title, summary=summary, expert_commentary=expert, tags=tags)
 
 
 def slugify(text: str, max_len: int = 80) -> str:
@@ -237,12 +248,15 @@ def save_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def generate_post_html(post: ExtractedPost, *, post_title: str, date_str: str, pdf_rel_url: str) -> str:
+def generate_post_html(post: ExtractedPost, *, post_title: str, date_str: str, pdf_rel_url: str, tags: List[str]) -> str:
     # 内嵌样式：即使单页也美观
     safe_title = html_escape(post_title)
     # 处理 Markdown 加粗标记，然后转行
     summary_html = nl2br(markdown_bold_to_html(post.summary))
     expert_html = nl2br(markdown_bold_to_html(post.expert_commentary))
+    
+    # 生成标签 HTML
+    tags_html = "".join([f'<span class="pill">{html_escape(tag)}</span>' for tag in tags])
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -332,6 +346,14 @@ def generate_post_html(post: ExtractedPost, *, post_title: str, date_str: str, p
       padding: 14px 14px;
       white-space: normal;
     }}
+    .expert-comment {{
+      background: #fff9f0;
+      border: 2px solid #ffd699;
+      border-radius: 12px;
+      padding: 16px 18px;
+      white-space: normal;
+      line-height: 1.8;
+    }}
     .actions {{
       display: flex;
       flex-wrap: wrap;
@@ -375,6 +397,7 @@ def generate_post_html(post: ExtractedPost, *, post_title: str, date_str: str, p
       <div class="sub">
         <span class="pill">AI 摘要</span>
         <span class="pill">供应链视角</span>
+        {tags_html}
       </div>
       <h1>{safe_title}</h1>
       <div class="sub">自动从 PDF 提取标题、核心摘要与专家点评。</div>
@@ -391,7 +414,7 @@ def generate_post_html(post: ExtractedPost, *, post_title: str, date_str: str, p
 
       <div class="section">
         <h2>💬 专家点评（供应链从业者视角）</h2>
-        <div class="box">{expert_html}</div>
+        <div class="expert-comment">{expert_html}</div>
       </div>
 
       <div class="footer">
@@ -449,6 +472,7 @@ def upsert_article_entry(
     pdf_url: str,
     file_size: str,
     post_url: str,
+    tags: List[str],
 ) -> List[Dict[str, Any]]:
     # 新文章放最上方；id 自动递增
     max_id = 0
@@ -468,6 +492,7 @@ def upsert_article_entry(
         "fileSize": file_size,
         "postUrl": post_url,
         "summary": strip_html(core_viewpoints_html)[:280],
+        "tags": tags,  # 新增：标签字段
     }
 
     # 去重：若已有同标题且 pdfUrl 相同，则不重复插入
@@ -570,15 +595,14 @@ def main() -> int:
 
         extracted = deepseek_extract_json(pdf_text, api_key=api_key)
 
-        # 发布 PDF：移动到 /pdfs
+        # 发布 PDF：移动到 /pdfs（若目标已存在则覆盖）
         target_pdf_path = PUBLISHED_PDFS_DIR / pdf_path.name
         if target_pdf_path.exists():
-            # 防止覆盖：加时间戳
-            stem = target_pdf_path.stem
-            ts = datetime.now().strftime("%Y%m%d%H%M%S")
-            target_pdf_path = PUBLISHED_PDFS_DIR / f"{stem}-{ts}{target_pdf_path.suffix}"
+            print(f"目标 PDF 已存在，将覆盖：{target_pdf_path.name}")
+            target_pdf_path.unlink()  # 删除已存在的文件
 
         shutil.move(str(pdf_path), str(target_pdf_path))
+        print(f"PDF 已移动：{pdf_path.name} -> {target_pdf_path}")
         pdf_rel_url = f"pdfs/{target_pdf_path.name}"
 
         # 生成 post HTML
@@ -588,7 +612,13 @@ def main() -> int:
         post_path = POSTS_DIR / post_filename
         post_rel_url = f"posts/{post_filename}"
 
-        html = generate_post_html(extracted, post_title=extracted.title, date_str=date_str, pdf_rel_url=pdf_rel_url)
+        html = generate_post_html(
+            extracted, 
+            post_title=extracted.title, 
+            date_str=date_str, 
+            pdf_rel_url=pdf_rel_url,
+            tags=extracted.tags
+        )
         post_path.write_text(html, encoding="utf-8")
 
         # 更新 articles.json（用于首页渲染）
@@ -604,6 +634,7 @@ def main() -> int:
             pdf_url=pdf_rel_url,
             file_size=file_size,
             post_url=post_rel_url,
+            tags=extracted.tags,
         )
 
         # 更新 index.html 最新链接块
