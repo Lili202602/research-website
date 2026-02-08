@@ -23,8 +23,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
       background: 'rgba(255, 255, 255, 0.85)',
       backdropFilter: 'blur(20px)',
       borderRadius: '20px',
-      padding: '32px',
-      marginBottom: '24px',
+      padding: '28px',
+      marginBottom: '20px',
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
       border: '1px solid rgba(255, 255, 255, 0.3)',
       position: 'relative',
@@ -58,7 +58,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: '16px',
+        marginBottom: '20px',
         gap: '20px',
         position: 'relative',
         zIndex: 1
@@ -143,12 +143,12 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
       </div>
 
       {/* 核心观点 */}
-      <div style={{ marginBottom: '24px', position: 'relative', zIndex: 1 }}>
+      <div style={{ marginBottom: '20px', position: 'relative', zIndex: 1 }}>
         <h4 style={{
-          fontSize: '1rem',
+          fontSize: '0.95rem',
           fontWeight: '600',
           color: '#2D3436',
-          marginBottom: '12px'
+          marginBottom: '10px'
         }}>
           核心观点
         </h4>
@@ -156,10 +156,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           style={{
             color: '#636E72',
             lineHeight: '1.8',
-            background: 'rgba(45, 52, 54, 0.03)',
-            padding: '18px',
-            borderRadius: '10px',
-            borderLeft: '3px solid #2D3436'
+            padding: '0'
           }}
           dangerouslySetInnerHTML={{ __html: article.coreViewpoints }}
         />
@@ -168,10 +165,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
       {/* 专业点评 */}
       <div style={{ position: 'relative', zIndex: 1 }}>
         <h4 style={{
-          fontSize: '1rem',
+          fontSize: '0.95rem',
           fontWeight: '600',
           color: '#2D3436',
-          marginBottom: '12px'
+          marginBottom: '10px'
         }}>
           专业点评
         </h4>
@@ -179,10 +176,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           style={{
             color: '#636E72',
             lineHeight: '1.8',
-            background: 'rgba(45, 52, 54, 0.03)',
-            padding: '18px',
-            borderRadius: '10px',
-            borderLeft: '3px solid #2D3436'
+            padding: '0'
           }}
           dangerouslySetInnerHTML={{ __html: article.comments }}
         />

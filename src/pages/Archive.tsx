@@ -3,19 +3,12 @@ import { ARTICLES_DATA } from '../data/articlesData';
 import ArticleCard from '../components/ArticleCard';
 
 const Archive: React.FC = () => {
+  // 显示除了最新一篇以外的所有历史文章
+  const archiveArticles = ARTICLES_DATA.slice(1);
+
   return (
     <div>
-      <div style={{
-        fontSize: '1.6rem',
-        fontWeight: '700',
-        color: '#2D3436',
-        marginBottom: '24px',
-        letterSpacing: '-0.02em'
-      }}>
-        往期回看
-      </div>
-
-      {ARTICLES_DATA.map((article) => (
+      {archiveArticles.map((article) => (
         <ArticleCard key={article.id} article={article} />
       ))}
     </div>

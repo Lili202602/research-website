@@ -12,26 +12,15 @@ const Sidebar: React.FC = () => {
 
   return (
     <nav style={{
-      width: '220px',
+      width: '160px',
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(10px)',
       borderRadius: '16px',
-      padding: '20px 12px',
+      padding: '16px 10px',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
       position: 'sticky',
       top: '24px'
     }}>
-      <div style={{
-        fontSize: '1rem',
-        fontWeight: '700',
-        color: '#2D3436',
-        marginBottom: '20px',
-        paddingLeft: '12px',
-        letterSpacing: '-0.01em'
-      }}>
-        导航
-      </div>
-      
       {menuItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
@@ -40,7 +29,7 @@ const Sidebar: React.FC = () => {
             onClick={() => navigate(item.path)}
             style={{
               width: '100%',
-              padding: '12px 16px',
+              padding: '10px 14px',
               marginBottom: '8px',
               border: 'none',
               borderRadius: '10px',
@@ -48,7 +37,7 @@ const Sidebar: React.FC = () => {
                 ? 'rgba(45, 52, 54, 0.9)'
                 : 'transparent',
               color: isActive ? '#ffffff' : '#636E72',
-              fontSize: '0.95rem',
+              fontSize: '0.9rem',
               fontWeight: isActive ? '600' : '500',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
