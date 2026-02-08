@@ -40,19 +40,47 @@ function setCurrentYear() {
     }
 }
 
-// 动态加载文章数据
-async function loadArticles() {
+// 文章数据常量 - 直接定义在代码中
+const ARTICLES_DATA = [
+    {
+        id: 7,
+        title: "益普索中国智能家电市场趋势洞察",
+        date: "2026年02月07日",
+        coreViewpoints: "<div class=\"insight-item\">【<strong>消费趋势转型</strong>】：中国家电市场正从规模扩张转向品质升级，Z世代成为消费主力，推动需求向情感化、个性化、智能便捷和颜值追求等多层次体验演变。</div><div class=\"insight-item\">【<strong>设计美学革新</strong>】：家电设计追求与家居环境无缝融合，通过嵌入式设计和家具化质感实现视觉消隐，平嵌成为新基准，强调美学与和谐。</div><div class=\"insight-item\">【<strong>空间优化创新</strong>】：面对紧凑居住空间，家电设计转向"小而精"，通过尺寸缩减和复合功能实现空间扩容，技术堆叠提升功能价值。</div>",
+        comments: "<div class=\"insight-item\">【<strong>供应链敏捷性提升</strong>】：报告指出品类微细分浪潮（如个人洗衣机需求达52%）和设计美学革新（平嵌成为新基准），要求供应链从业者增强敏捷响应能力。</div>",
+        pdfUrl: "pdfs/【益普索(中国)咨询】中国智能家电市场趋势洞察.pdf",
+        fileSize: "7.7 MB",
+        postUrl: "posts/20260207-益普索中国智能家电市场趋势洞察.html"
+    },
+    {
+        id: 6,
+        title: "中国服饰鞋类企业如何在东南亚实现海外品牌和渠道落地",
+        date: "2026年02月06日",
+        coreViewpoints: "<div class=\"insight-item\">【<strong>战略出海定位</strong>】：报告强调企业需明确出海定位，战略出海以全球为目标市场，战术出海则聚焦供应链迁移。</div>",
+        comments: "<div class=\"insight-item\">【<strong>供应链网络重构</strong>】：报告指出中国服饰鞋类企业出海需从战术迁移转向战略布局。</div>",
+        pdfUrl: "pdfs/【海通国际】中国服饰鞋类企业如何在东南亚实现海外品牌和渠道落地.pdf",
+        fileSize: "4.5 MB",
+        postUrl: "posts/20260206-中国服饰鞋类企业如何在东南亚实现海外品牌和渠道落地.html"
+    },
+    {
+        id: 5,
+        title: "2025中国成人健康管理洞察",
+        date: "2026年02月06日",
+        coreViewpoints: "健康意识普遍提升，全民关注成为常态，平均关注度达8.84分（10分制）。",
+        comments: "从供应链从业者视角看，这份报告揭示了健康管理市场的显著趋势。",
+        pdfUrl: "pdfs/【益普索Ipsos】成人健康行业：2025中国成人健康管理洞察【洞见研报DJyanbao.com】 (1).pdf",
+        fileSize: "4.8 MB",
+        postUrl: "posts/20260206-2025中国成人健康管理洞察.html"
+    }
+];
+
+// 加载文章数据（现在直接使用内嵌数据）
+function loadArticles() {
     try {
-        console.log('开始从JSON加载文章数据...');
+        console.log('开始加载文章数据...');
         
-        // 使用缓存控制版本号强制重新加载
-        const response = await fetch(`data/articles.json?${CACHE_BUSTER}`);
-        
-        if (!response.ok) {
-            throw new Error(`加载失败! 状态码: ${response.status}`);
-        }
-        
-        const articles = await response.json();
+        // 直接使用内嵌的文章数据
+        const articles = ARTICLES_DATA;
         console.log('成功加载文章数：', articles.length, '篇');
         
         // 显示文章
@@ -70,7 +98,6 @@ async function loadArticles() {
         if (container) {
             container.innerHTML = `
                 <div class="error-state">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c; margin-bottom: 20px;"></i>
                     <h3>数据加载失败</h3>
                     <p>${error.message || '请检查网络连接'}</p>
                     <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
@@ -111,72 +138,33 @@ function displayArticles(articles) {
     const isArchivePage = window.location.pathname.includes('archive');
     const listToRender = isArchivePage ? articles : articles.slice(0, 3);
     
-    // 保存全局数据（用于搜索）
-    if (isArchivePage && allArticlesData.length === 0) {
-        allArticlesData = articles;
-    }
-    
     // 生成文章HTML
     listToRender.forEach((article, index) => {
-        // 生成标签HTML
-        let tagsHTML = '';
-        if (article.tags && Array.isArray(article.tags) && article.tags.length > 0) {
-            tagsHTML = `
-                <div class="article-tags">
-                    ${article.tags.map(tag => `<span class="tag-pill">${tag}</span>`).join('')}
-                </div>
-            `;
-        }
-        
-        // 为每篇文章生成不同的渐变色
-        const gradients = [
-            'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 25%, #c44569 50%, #a05195 75%, #667eea 100%)',
-            'linear-gradient(135deg, #f093fb 0%, #f5576c 30%, #c44569 60%, #667eea 100%)',
-            'linear-gradient(135deg, #4facfe 0%, #00f2fe 30%, #43e97b 60%, #38f9d7 100%)',
-            'linear-gradient(135deg, #fa709a 0%, #fee140 30%, #f093fb 60%, #667eea 100%)',
-            'linear-gradient(135deg, #30cfd0 0%, #330867 50%, #a05195 100%)',
-            'linear-gradient(135deg, #ff9a56 0%, #ff6b95 30%, #c44569 60%, #667eea 100%)'
-        ];
-        const gradient = gradients[index % gradients.length];
-        
-        // 处理核心观点 - 转换为列表项
-        const viewpointsHTML = article.coreViewpoints ? 
-            convertToViewpointsList(article.coreViewpoints) : 
-            '<li class="viewpoint-item">暂无核心观点</li>';
-        
-        // 处理专家点评 - 转换为列表项
-        const commentsHTML = article.comments ? 
-            convertToViewpointsList(article.comments) : 
-            '<li class="viewpoint-item">暂无专业点评</li>';
-        
         const articleHTML = `
-            <div class="article-card" style="background: ${gradient};">
+            <div class="article-card">
                 <div class="article-header">
-                    <div class="article-title-section">
-                        <h2 class="article-title">${article.title || '未命名报告'}</h2>
-                        <div class="article-date">${article.date || '日期未知'}</div>
-                        ${tagsHTML}
-                    </div>
-                    <a href="${article.pdfUrl || '#'}" class="download-btn" target="_blank" rel="noopener noreferrer">
-                        download
-                    </a>
+                    <div class="article-number">${index + 1}</div>
+                    <h3 class="article-title">${
+                        article.postUrl
+                            ? `<a href="${article.postUrl}" style="color: inherit; text-decoration: none;">${article.title}</a>`
+                            : `${article.title}`
+                    }</h3>
+                    <div class="article-date">📅 ${article.date}</div>
                 </div>
                 
-                <div class="article-content">
-                    <h3 class="section-title">核心观点</h3>
-                    <ul class="viewpoints-list">
-                        ${viewpointsHTML}
-                    </ul>
-                    
-                    <div class="expert-section">
-                        <h3 class="section-title">专业点评</h3>
-                        <div class="expert-comment">
-                            <ul class="viewpoints-list">
-                                ${commentsHTML}
-                            </ul>
-                        </div>
-                    </div>
+                <div class="section">
+                    <h4 class="section-title">🎯 核心观点</h4>
+                    <div class="section-content">${article.coreViewpoints || '暂无核心观点'}</div>
                 </div>
+                
+                <div class="section">
+                    <h4 class="section-title">💬 专业点评</h4>
+                    <div class="section-content">${article.comments || '暂无专业点评'}</div>
+                </div>
+                
+                <a href="${article.pdfUrl || '#'}" class="download-btn" target="_blank" rel="noopener noreferrer">
+                    📥 下载完整报告 (${article.fileSize || '未知大小'})
+                </a>
             </div>
         `;
         
@@ -235,11 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 加载文章数据
     loadArticles();
     
-    // 初始化搜索功能（仅在归档页面）
-    if (window.location.pathname.includes('archive')) {
-        initializeSearch();
-    }
-    
     // 添加简单的访问统计
     try {
         const visitCount = localStorage.getItem('visitCount') || 0;
@@ -269,141 +252,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('网站初始化完成 ✅');
 });
 
-// 全局变量存储所有文章数据
-let allArticlesData = [];
-
-// 辅助函数：将 HTML 内容转换为观点列表
-function convertToViewpointsList(htmlContent) {
-    if (!htmlContent) return '<li class="viewpoint-item">暂无内容</li>';
-    
-    // 如果已经包含 .insight-item，提取其内容
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    
-    const insightItems = tempDiv.querySelectorAll('.insight-item');
-    
-    if (insightItems.length > 0) {
-        // 已有 insight-item 结构，转换为 li
-        return Array.from(insightItems).map(item => {
-            return `<li class="viewpoint-item">${item.innerHTML}</li>`;
-        }).join('');
-    } else {
-        // 纯文本或简单 HTML，按行分割
-        const lines = htmlContent.split(/<br\s*\/?>/i).filter(line => line.trim());
-        if (lines.length > 0) {
-            return lines.map(line => {
-                const cleanLine = line.trim().replace(/^[•\-\*]\s*/, '');
-                return `<li class="viewpoint-item">${cleanLine}</li>`;
-            }).join('');
-        }
-        return `<li class="viewpoint-item">${htmlContent}</li>`;
-    }
-}
-
-// 初始化搜索功能
-function initializeSearch() {
-    const searchInput = document.getElementById('search-input');
-    if (!searchInput) return;
-    
-    console.log('初始化搜索功能...');
-    
-    // 实时搜索（输入时触发）
-    searchInput.addEventListener('input', function(e) {
-        const keyword = e.target.value.trim();
-        filterArticles(keyword);
-    });
-    
-    // 回车键搜索
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const keyword = e.target.value.trim();
-            filterArticles(keyword);
-        }
-    });
-}
-
-// 筛选文章
-function filterArticles(keyword) {
-    const container = document.getElementById('articles-container');
-    const resultsInfo = document.getElementById('search-results-info');
-    
-    if (!container || allArticlesData.length === 0) return;
-    
-    // 如果关键词为空，显示所有文章
-    if (!keyword) {
-        displayArticles(allArticlesData);
-        resultsInfo.textContent = '';
-        resultsInfo.classList.remove('active');
-        return;
-    }
-    
-    // 转换为小写进行不区分大小写的搜索
-    const lowerKeyword = keyword.toLowerCase();
-    
-    // 筛选匹配的文章
-    const filteredArticles = allArticlesData.filter(article => {
-        // 搜索标题
-        const titleMatch = article.title && article.title.toLowerCase().includes(lowerKeyword);
-        
-        // 搜索标签
-        const tagsMatch = article.tags && Array.isArray(article.tags) && 
-            article.tags.some(tag => tag.toLowerCase().includes(lowerKeyword));
-        
-        // 搜索核心观点（去除HTML标签后搜索）
-        const viewpointsText = article.coreViewpoints ? 
-            article.coreViewpoints.replace(/<[^>]+>/g, '').toLowerCase() : '';
-        const viewpointsMatch = viewpointsText.includes(lowerKeyword);
-        
-        // 搜索专业点评（去除HTML标签后搜索）
-        const commentsText = article.comments ? 
-            article.comments.replace(/<[^>]+>/g, '').toLowerCase() : '';
-        const commentsMatch = commentsText.includes(lowerKeyword);
-        
-        return titleMatch || tagsMatch || viewpointsMatch || commentsMatch;
-    });
-    
-    console.log(`搜索关键词: "${keyword}", 找到 ${filteredArticles.length} 篇报告`);
-    
-    // 显示筛选结果
-    if (filteredArticles.length > 0) {
-        displayArticles(filteredArticles);
-        resultsInfo.textContent = `找到 ${filteredArticles.length} 篇相关报告`;
-        resultsInfo.classList.add('active');
-    } else {
-        // 显示无结果提示
-        container.innerHTML = `
-            <div class="no-results">
-                <h3>😔 未找到相关报告</h3>
-                <p>没有找到包含 "<strong>${keyword}</strong>" 的报告</p>
-                <button class="clear-search-btn" onclick="clearSearch()">清除搜索</button>
-            </div>
-        `;
-        resultsInfo.textContent = '未找到匹配的报告';
-        resultsInfo.classList.add('active');
-    }
-}
-
-// 清除搜索
-function clearSearch() {
-    const searchInput = document.getElementById('search-input');
-    const resultsInfo = document.getElementById('search-results-info');
-    
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-    }
-    
-    if (resultsInfo) {
-        resultsInfo.textContent = '';
-        resultsInfo.classList.remove('active');
-    }
-    
-    displayArticles(allArticlesData);
-}
-
 // 导出函数供全局使用（如果需要）
 window.reloadArticles = loadArticles;
 window.refreshPage = function() {
     location.reload(true);
 };
-window.clearSearch = clearSearch;

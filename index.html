@@ -1,57 +1,139 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <script>
+    // 混淆+提前执行验证码逻辑，利用自执行函数并避免明文密码
+    (function(){
+        var _0x5b22=["\x44\x45\x56\x49\x43\x45\x5F\x4C\x4F\x43\x4B\x5F\x50\x41\x53\x53","\x4C\x69\x6C\x69\x32\x30\x32\x36","\u53E3\u4EE4\u9519\u8BEF\uFF0C\u8BF7\u524D\u5F80\u5C0F\u7EA2\u4E66\u83B7\u53D6\u8BBF\u95EE\u53E3\u4EE4\u3002","\x69\x6E\x6E\x65\x72\x48\x54\x4D\x4C","\x72\x65\x6D\x6F\x76\x65\x49\x74\x65\x6D","\x67\x65\x74\x49\x74\x65\x6D","\x73\x65\x74\x49\x74\x65\x6D","\x70\x72\x6F\x6D\x70\x74","\x74\x68\x72\x6F\x77"];function _0x1e7b(_0x3b99){return _0x5b22[_0x3b99];}
+        (function(){
+            var k=_0x1e7b(0),p=_0x1e7b(1);
+            function l(){
+                document.body[_0x1e7b(3)]='<div style="padding:48px 12px;text-align:center;font-size:1.1rem;">'+_0x1e7b(2)+'</div>';
+                localStorage[_0x1e7b(4)](k);
+            }
+            var s=localStorage[_0x1e7b(5)](k);
+            if(s===p)return;
+            for(var i=0;i<3;i++){
+                var input=window[_0x1e7b(7)]('\u8BF7\u8F93\u5165\u8BBF\u95EE\u53E3\u4EE4\xEF\xBC\x9A');
+                if(input===null){
+                    l();
+                    window[_0x1e7b(8)]('');
+                }
+                if(input===p){
+                    localStorage[_0x1e7b(6)](k,p);return;
+                }
+            }
+            l();
+            window[_0x1e7b(8)]('');
+        })();
+    })();
+    </script>
+    <script>
+        (function(){
+            var PASS_KEY = 'DEVICE_LOCK_PASS';
+            var PASSWORD = 'Lili2026';
+            function lockPage() {
+                document.body.innerHTML = '<div style="padding:48px 12px;text-align:center;font-size:1.1rem;">口令错误，请前往小红书获取访问口令。</div>';
+                localStorage.removeItem(PASS_KEY);
+            }
+
+            function verifyPass() {
+                var stored = localStorage.getItem(PASS_KEY);
+                if (stored === PASSWORD) return;
+                for (var i = 0; i < 3; i++) {
+                    var input = window.prompt('请输入访问口令：');
+                    if (input === null) {
+                        lockPage();
+                        throw '';
+                    }
+                    if (input === PASSWORD) {
+                        localStorage.setItem(PASS_KEY, PASSWORD);
+                        return;
+                    }
+                }
+                lockPage();
+                throw '';
+            }
+
+            // head内执行, 等页面ready后才可操作body
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", verifyPass);
+            } else {
+                verifyPass();
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 添加禁用缓存的meta标签 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
-    <title>Lili的供应链AI Lab | 行业洞察 + 专业点评</title>
-    <link rel="stylesheet" href="style.css?v=20240322">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
+    <title>Lili's Supply Chain AI Lab | 深度行业研究报告</title>
+    <!-- 添加版本号强制刷新样式缓存 -->
+    <link rel="stylesheet" href="style.css?v=20240321">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
 </head>
 <body>
-    <div class="page-wrapper">
-        <!-- 左侧导航栏 -->
-        <aside class="sidebar">
-            <div class="nav-card active">
-                <h3>每日洞察</h3>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>🔬 Lili's Supply Chain AI Lab</h1>
+            <p class="subtitle">专业深度 · 核心观点 · 每周更新</p>
+            <div class="header-info">
+                <span id="current-date"></span>
+                <button onclick="window.location.href='archive.html'">查看往期</button>
             </div>
-            <div class="nav-card" onclick="window.location.href='archive.html'">
-                <h3>往期回看</h3>
-            </div>
-        </aside>
+        </header>
 
-        <!-- 主内容区域 -->
-        <main class="main-content">
-            <!-- Hero 区域 -->
-            <section class="hero-section">
-                <div class="hero-text">
-                    <h1 class="hero-title">Lili的供应链AI Lab</h1>
-                    <p class="hero-subtitle">行业洞察 + 专业点评</p>
-                    <p class="hero-update">每周一到周五更新</p>
-                </div>
-                <div class="hero-illustration">
-                    🏭
-                </div>
+        <!-- 主要内容 -->
+        <main>
+            <section class="intro">
+                <h2>🎯 本周精选报告</h2>
+                <p>精选三篇深度行业研究报告，提炼核心观点，提供专业解读。</p>
             </section>
 
-            <!-- 文章列表 -->
-            <div class="articles-grid" id="articles-container">
-                <div class="loading-state">
-                    <p>正在加载最新报告...</p>
+            <!-- 文章容器 -->
+            <!-- AUTO-GENERATED LATEST POST LINK START -->
+            <div id="latest-post" style="margin: 0 0 18px 0;">
+                <div style="background:#f8fbff;border:1px solid #e7f0ff;border-radius:10px;padding:14px 16px;">
+                    <div style="font-weight:700;color:#2c3e50;margin-bottom:6px;">🆕 最新解读（自动发布）</div>
+                    <div style="color:#7f8c8d;font-size:0.95rem;margin-bottom:10px;">2026年02月07日</div>
+                    <a href="posts/20260207-益普索中国智能家电市场趋势洞察.html" style="color:#3498db;font-weight:700;text-decoration:none;">益普索中国智能家电市场趋势洞察</a>
                 </div>
             </div>
+            <!-- AUTO-GENERATED LATEST POST LINK END -->
+            <div id="articles-container">
+                <p>正在加载报告...</p>
+            </div>
 
-            <!-- 页脚 -->
-            <footer>
-                <p>© <span id="current-year"></span> Lili的供应链AI Lab · 让研究更有价值</p>
-                <p class="disclaimer">报告内容仅供参考，不构成投资建议。市场有风险，投资需谨慎。</p>
-            </footer>
+            <!-- 使用提示 -->
+            <div class="tips">
+                <div class="tip">
+                    <h4>💡 使用提示</h4>
+                    <p>点击下载按钮获取完整PDF报告。</p>
+                </div>
+                <div class="tip">
+                    <h4>🔄 更新频率</h4>
+                    <p>每周五更新最新行业研究报告。</p>
+                </div>
+                <div class="tip">
+                    <h4>📱 移动访问</h4>
+                    <p>支持手机和平板电脑访问。</p>
+                </div>
+            </div>
+        </main>
+
         </main>
     </div>
 
-    <script src="script.js?v=20240322"></script>
+    <!-- 页脚 - 移到 container 外部 -->
+    <footer>
+        <p>© <span id="current-year"></span> Lili的供应链AI Lab</p>
+    </footer>
+
+    <!-- JavaScript - 添加版本号强制刷新 -->
+    <script src="script.js?v=20240321"></script>
 </body>
 </html>
