@@ -130,43 +130,53 @@ function displayArticles(articles) {
         
         // 为每篇文章生成不同的渐变色
         const gradients = [
-            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 25%, #c44569 50%, #a05195 75%, #667eea 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 30%, #c44569 60%, #667eea 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 30%, #43e97b 60%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 30%, #f093fb 60%, #667eea 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 50%, #a05195 100%)',
+            'linear-gradient(135deg, #ff9a56 0%, #ff6b95 30%, #c44569 60%, #667eea 100%)'
         ];
         const gradient = gradients[index % gradients.length];
         
+        // 处理核心观点 - 转换为列表项
+        const viewpointsHTML = article.coreViewpoints ? 
+            convertToViewpointsList(article.coreViewpoints) : 
+            '<li class="viewpoint-item">暂无核心观点</li>';
+        
+        // 处理专家点评 - 转换为列表项
+        const commentsHTML = article.comments ? 
+            convertToViewpointsList(article.comments) : 
+            '<li class="viewpoint-item">暂无专业点评</li>';
+        
         const articleHTML = `
-            <div class="article-card">
-                <div class="article-cover" style="background: ${gradient};"></div>
-                
+            <div class="article-card" style="background: ${gradient};">
                 <div class="article-header">
-                    <div class="article-number">${index + 1}</div>
-                    <h3 class="article-title">${
-                        article.postUrl
-                            ? `<a href="${article.postUrl}" style="color: inherit; text-decoration: none;">${article.title}</a>`
-                            : `${article.title}`
-                    }</h3>
-                    <div class="article-date">📅 ${article.date}</div>
-                    ${tagsHTML}
+                    <div class="article-title-section">
+                        <h2 class="article-title">${article.title || '未命名报告'}</h2>
+                        <div class="article-date">${article.date || '日期未知'}</div>
+                        ${tagsHTML}
+                    </div>
+                    <a href="${article.pdfUrl || '#'}" class="download-btn" target="_blank" rel="noopener noreferrer">
+                        download
+                    </a>
                 </div>
                 
-                <div class="section">
-                    <h4 class="section-title">🎯 核心观点</h4>
-                    <div class="section-content">${article.coreViewpoints || '暂无核心观点'}</div>
+                <div class="article-content">
+                    <h3 class="section-title">核心观点</h3>
+                    <ul class="viewpoints-list">
+                        ${viewpointsHTML}
+                    </ul>
+                    
+                    <div class="expert-section">
+                        <h3 class="section-title">专业点评</h3>
+                        <div class="expert-comment">
+                            <ul class="viewpoints-list">
+                                ${commentsHTML}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="section">
-                    <h4 class="section-title">💬 专业点评</h4>
-                    <div class="expert-comment">${article.comments || '暂无专业点评'}</div>
-                </div>
-                
-                <a href="${article.pdfUrl || '#'}" class="download-btn" target="_blank" rel="noopener noreferrer">
-                    📥 下载完整报告 (${article.fileSize || '未知大小'})
-                </a>
             </div>
         `;
         
@@ -261,6 +271,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 全局变量存储所有文章数据
 let allArticlesData = [];
+
+// 辅助函数：将 HTML 内容转换为观点列表
+function convertToViewpointsList(htmlContent) {
+    if (!htmlContent) return '<li class="viewpoint-item">暂无内容</li>';
+    
+    // 如果已经包含 .insight-item，提取其内容
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    const insightItems = tempDiv.querySelectorAll('.insight-item');
+    
+    if (insightItems.length > 0) {
+        // 已有 insight-item 结构，转换为 li
+        return Array.from(insightItems).map(item => {
+            return `<li class="viewpoint-item">${item.innerHTML}</li>`;
+        }).join('');
+    } else {
+        // 纯文本或简单 HTML，按行分割
+        const lines = htmlContent.split(/<br\s*\/?>/i).filter(line => line.trim());
+        if (lines.length > 0) {
+            return lines.map(line => {
+                const cleanLine = line.trim().replace(/^[•\-\*]\s*/, '');
+                return `<li class="viewpoint-item">${cleanLine}</li>`;
+            }).join('');
+        }
+        return `<li class="viewpoint-item">${htmlContent}</li>`;
+    }
+}
 
 // 初始化搜索功能
 function initializeSearch() {

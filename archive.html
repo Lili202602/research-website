@@ -7,38 +7,66 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
-    <title>行研精选 · 往期报告归档 | Lili's Supply Chain AI Lab</title>
-    <link rel="stylesheet" href="style.css?v=20240321">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <title>往期回看 | Lili的供应链AI Lab</title>
+    <link rel="stylesheet" href="style.css?v=20240322">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📈 行研精选 · 往期报告</h1>
-            <p class="subtitle">Lili's Supply Chain AI Lab · 历史报告归档</p>
-            <div class="header-info">
-                <span id="current-date"></span>
-                <button onclick="window.location.href='index.html'">返回首页</button>
+    <div class="page-wrapper">
+        <!-- 左侧导航栏 -->
+        <aside class="sidebar">
+            <div class="nav-card" onclick="window.location.href='index.html'">
+                <h3>每日洞察</h3>
             </div>
-        </header>
+            <div class="nav-card active">
+                <h3>往期回看</h3>
+            </div>
+        </aside>
 
-        <main>
-            <section class="intro">
-                <h2>📚 全部历史报告</h2>
-                <p>这里展示所有已发布的研究报告，按时间倒序排列。建议结合行业节奏、技术变迁与供应链变化进行纵向对比阅读。</p>
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- Hero 区域 -->
+            <section class="hero-section">
+                <div class="hero-text">
+                    <h1 class="hero-title">往期报告归档</h1>
+                    <p class="hero-subtitle">历史报告 · 供应链视角</p>
+                    <p class="hero-update">按时间倒序排列，支持关键词搜索</p>
+                </div>
+                <div class="hero-illustration">
+                    📚
+                </div>
             </section>
 
-            <div id="articles-container">
-                <p>正在加载历史报告...</p>
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <div style="position: relative;">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-box" 
+                        placeholder="🔍 搜索报告标题、标签或关键词..."
+                        autocomplete="off"
+                    >
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div id="search-results-info" class="search-results-info"></div>
             </div>
-        </main>
 
-        <footer>
-            <p>© <span id="current-year"></span> Lili's Supply Chain AI Lab · Research & Insights</p>
-            <p class="disclaimer">内容仅供学习与研究参考，不构成任何投资、法律或合规建议。业务决策前请结合自身情况审慎评估。</p>
-        </footer>
+            <!-- 文章列表 -->
+            <div class="articles-grid" id="articles-container">
+                <div class="loading-state">
+                    <p>正在加载历史报告...</p>
+                </div>
+            </div>
+
+            <!-- 页脚 -->
+            <footer>
+                <p>© <span id="current-year"></span> Lili的供应链AI Lab · 让研究更有价值</p>
+                <p class="disclaimer">报告内容仅供参考，不构成投资建议。市场有风险，投资需谨慎。</p>
+            </footer>
+        </main>
     </div>
 
-    <script src="script.js?v=20240321"></script>
+    <script src="script.js?v=20240322"></script>
 </body>
 </html>
