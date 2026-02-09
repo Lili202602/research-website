@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "homepage": "https://lili202602.github.io/research-website",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
