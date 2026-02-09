@@ -18,8 +18,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "process": "ts-node scripts/process-pdfs.ts",
-    "process:single": "ts-node scripts/process-pdfs.ts --single"
+    "process": "NODE_OPTIONS='--loader ts-node/esm --no-warnings' ts-node scripts/process-pdfs.ts",
+    "process:single": "NODE_OPTIONS='--loader ts-node/esm --no-warnings' ts-node scripts/process-pdfs.ts --single"
   },
   "eslintConfig": {
     "extends": [
