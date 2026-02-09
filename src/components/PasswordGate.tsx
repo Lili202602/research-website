@@ -10,12 +10,40 @@ const hashPassword = async (password: string): Promise<string> => {
   return hashHex;
 };
 
-// 正确密码的哈希值（lili2026 的 SHA-256）
-const CORRECT_PASSWORD_HASH = 'f8c3bf62a9aa3e6fc1619c250e48aba7f3367ef08f0ea4d8b1e3f8c3bf62a9aa';
+// 正确密码的哈希值
+const PASSWORD_HASHES = {
+  main: '91b898b6148b0a29d76124072b92f03dae440e17bebdb671bffafeaeb828b3e7', // lili2026
+  test: '7997237f84ee2b94d404fb9e1f4ba3f86c52e12aac1de0f9e5685051293ffb68'  // test2026
+};
 
 const AUTH_KEY = 'LILI_AUTH_TOKEN';
+const DEVICE_ID_KEY = 'LILI_DEVICE_ID';
 const ATTEMPTS_KEY = 'LILI_AUTH_ATTEMPTS';
-const LOCK_KEY = 'LILI_AUTH_LOCKED';
+const LOCK_TIME_KEY = 'LILI_LOCK_TIME';
+
+// 生成设备指纹
+const generateDeviceFingerprint = (): string => {
+  const nav = navigator;
+  const screen = window.screen;
+  const fingerprint = [
+    nav.userAgent,
+    nav.language,
+    screen.colorDepth,
+    screen.width + 'x' + screen.height,
+    new Date().getTimezoneOffset(),
+    !!window.sessionStorage,
+    !!window.localStorage
+  ].join('|');
+  
+  // 简单哈希
+  let hash = 0;
+  for (let i = 0; i < fingerprint.length; i++) {
+    const char = fingerprint.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+};
 
 interface PasswordGateProps {
   children: React.ReactNode;
@@ -26,46 +54,111 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ children }) => {
   const [password, setPassword] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
+  const [lockTimeRemaining, setLockTimeRemaining] = useState(0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // 检查是否已授权
     const authToken = localStorage.getItem(AUTH_KEY);
-    const locked = localStorage.getItem(LOCK_KEY);
+    const deviceId = localStorage.getItem(DEVICE_ID_KEY);
+    const currentDeviceId = generateDeviceFingerprint();
+    const lockTime = localStorage.getItem(LOCK_TIME_KEY);
     const storedAttempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0');
 
-    if (locked === 'true') {
-      setIsLocked(true);
-      setIsLoading(false);
-      return;
+    // 检查锁定状态
+    if (lockTime) {
+      const lockTimestamp = parseInt(lockTime);
+      const now = Date.now();
+      const timeDiff = now - lockTimestamp;
+      
+      if (timeDiff < 60000) { // 1分钟内
+        setIsLocked(true);
+        setLockTimeRemaining(Math.ceil((60000 - timeDiff) / 1000));
+        setIsLoading(false);
+        return;
+      } else {
+        // 超过1分钟，自动解锁
+        localStorage.removeItem(LOCK_TIME_KEY);
+        localStorage.removeItem(ATTEMPTS_KEY);
+      }
     }
 
     if (authToken) {
-      // 验证 token 是否有效
-      hashPassword('lili2026').then(hash => {
-        if (authToken === hash) {
-          setIsAuthenticated(true);
+      // 验证 token 和设备绑定
+      const isValidToken = Object.values(PASSWORD_HASHES).includes(authToken);
+      
+      if (isValidToken) {
+        if (deviceId && deviceId !== currentDeviceId) {
+          // 设备不匹配
+          setError('该口令已在其他设备激活，请联系管理员');
+          setIsLoading(false);
+          return;
         }
-        setIsLoading(false);
-      });
+        
+        // 保存当前设备ID
+        if (!deviceId) {
+          localStorage.setItem(DEVICE_ID_KEY, currentDeviceId);
+        }
+        
+        setIsAuthenticated(true);
+      }
+      setIsLoading(false);
     } else {
       setAttempts(storedAttempts);
       setIsLoading(false);
     }
   }, []);
 
+  // 倒计时效果
+  useEffect(() => {
+    if (isLocked && lockTimeRemaining > 0) {
+      const timer = setInterval(() => {
+        setLockTimeRemaining(prev => {
+          if (prev <= 1) {
+            // 倒计时结束，解锁
+            setIsLocked(false);
+            setAttempts(0);
+            localStorage.removeItem(LOCK_TIME_KEY);
+            localStorage.removeItem(ATTEMPTS_KEY);
+            setError('');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isLocked, lockTimeRemaining]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isLocked) return;
 
-    const hash = await hashPassword(password);
+    const hash = await hashPassword(password.trim());
     
-    if (hash === CORRECT_PASSWORD_HASH) {
+    // 检查是否是有效密码
+    const isValidPassword = Object.values(PASSWORD_HASHES).includes(hash);
+    
+    if (isValidPassword) {
       // 密码正确
+      const currentDeviceId = generateDeviceFingerprint();
+      const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
+      
+      // 检查设备绑定
+      if (storedDeviceId && storedDeviceId !== currentDeviceId) {
+        setError('该口令已在其他设备激活，请联系管理员');
+        setPassword('');
+        return;
+      }
+      
+      // 保存授权信息
       localStorage.setItem(AUTH_KEY, hash);
+      localStorage.setItem(DEVICE_ID_KEY, currentDeviceId);
       localStorage.removeItem(ATTEMPTS_KEY);
+      localStorage.removeItem(LOCK_TIME_KEY);
       setIsAuthenticated(true);
       setError('');
     } else {
@@ -75,9 +168,10 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ children }) => {
       localStorage.setItem(ATTEMPTS_KEY, newAttempts.toString());
       
       if (newAttempts >= 3) {
-        // 锁定
+        // 锁定1分钟
         setIsLocked(true);
-        localStorage.setItem(LOCK_KEY, 'true');
+        setLockTimeRemaining(60);
+        localStorage.setItem(LOCK_TIME_KEY, Date.now().toString());
         setError('');
       } else {
         setError(`密码错误，还剩 ${3 - newAttempts} 次机会`);
@@ -132,7 +226,7 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ children }) => {
               fontSize: '3rem',
               marginBottom: '24px'
             }}>
-              🔒
+              ⏱️
             </div>
             <h2 style={{
               fontSize: '1.5rem',
@@ -140,14 +234,29 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ children }) => {
               color: '#2D3436',
               marginBottom: '16px'
             }}>
-              访问已锁定
+              访问已暂时锁定
             </h2>
             <p style={{
               fontSize: '1rem',
               color: '#636E72',
-              lineHeight: '1.6'
+              lineHeight: '1.6',
+              marginBottom: '24px'
             }}>
-              尝试次数过多，请前往小红书获取访问口令
+              尝试次数过多，请稍后再试
+            </p>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              color: '#2D3436',
+              marginBottom: '8px'
+            }}>
+              {lockTimeRemaining}s
+            </div>
+            <p style={{
+              fontSize: '0.9rem',
+              color: '#95A5A6'
+            }}>
+              倒计时结束后自动恢复
             </p>
           </div>
         ) : (
@@ -248,7 +357,7 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ children }) => {
                 fontSize: '0.85rem',
                 color: '#95A5A6'
               }}>
-                剩余尝试次数：{3 - attempts}
+                剩余尝试次数：{3 - attempts} / 3
               </div>
             </form>
           </>
