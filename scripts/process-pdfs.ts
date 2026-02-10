@@ -171,39 +171,81 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
     `${pdfText}\n` +
     '-----\n';
 
-  const response = await axios.post(
-    DEEPSEEK_API_URL,
-    {
-      model: DEEPSEEK_MODEL,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.2,
-      max_tokens: 1500
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+  let response;
+  try {
+    response = await axios.post(
+      DEEPSEEK_API_URL,
+      {
+        model: DEEPSEEK_MODEL,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.2,
+        max_tokens: 1500
       },
-      timeout: 120000
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 120000
+      }
+    );
+  } catch (error: any) {
+    console.error('DeepSeek API 调用失败:', error.message);
+    if (error.response) {
+      console.error('响应状态:', error.response.status);
+      console.error('响应数据:', JSON.stringify(error.response.data, null, 2));
     }
-  );
+    throw error;
+  }
 
-  const content = response.data?.choices?.[0]?.message?.content?.trim();
+  const content = response.data?.choices?.[0]?.message?.content;
   if (!content) {
+    console.error('DeepSeek 返回数据:', JSON.stringify(response.data, null, 2));
     throw new Error('DeepSeek 返回为空');
+  }
+
+  console.log('DeepSeek 原始返回（前 500 字符）:', content.substring(0, 500));
+
+  // 清理和提取 JSON
+  let cleanedContent = content.trim();
+  
+  // 尝试提取 ```json 代码块
+  const jsonBlockMatch = cleanedContent.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonBlockMatch) {
+    cleanedContent = jsonBlockMatch[1].trim();
+    console.log('从 Markdown 代码块中提取 JSON');
+  }
+  
+  // 尝试提取 ``` 代码块（无 json 标记）
+  if (!jsonBlockMatch) {
+    const codeBlockMatch = cleanedContent.match(/```\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch) {
+      cleanedContent = codeBlockMatch[1].trim();
+      console.log('从通用代码块中提取 JSON');
+    }
+  }
+  
+  // 移除可能的 BOM 和其他不可见字符
+  cleanedContent = cleanedContent.replace(/^\uFEFF/, '');
+  
+  // 尝试提取 JSON 对象（从第一个 { 到最后一个 }）
+  const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    cleanedContent = jsonMatch[0];
   }
 
   let obj: any;
   try {
-    obj = JSON.parse(content);
+    obj = JSON.parse(cleanedContent);
   } catch (e) {
-    const match = content.match(/\{[\s\S]*\}/);
-    if (!match) throw e;
-    obj = JSON.parse(match[0]);
+    console.error('JSON 解析失败！');
+    console.error('清理后的内容:', cleanedContent);
+    console.error('解析错误:', e);
+    throw new Error(`JSON 解析失败: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   const title = (obj.title || '').trim();
@@ -211,18 +253,29 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
   const expert = (obj.expert_commentary || '').trim();
 
   if (!title || !summary || !expert) {
+    console.error('解析的对象:', JSON.stringify(obj, null, 2));
     throw new Error('DeepSeek JSON 字段缺失');
   }
+
+  console.log('✅ 成功解析 JSON');
+  console.log('标题:', title);
+  console.log('摘要长度:', summary.length);
+  console.log('点评长度:', expert.length);
 
   return { title, summary, expert_commentary: expert };
 }
 
 // ==================== 文章数据更新 ====================
 function updateArticlesDataTs(articles: Article[]): void {
-  const content = `// 文章数据常量 - 使用反引号包裹 HTML 内容
-export const ARTICLES_DATA = ${JSON.stringify(articles, null, 2)};
+  // 确保 HTML 内容中的特殊字符被正确转义
+  const articlesJson = JSON.stringify(articles, null, 2);
+  
+  const content = `// 文章数据常量 - 自动生成，请勿手动编辑
+export const ARTICLES_DATA = ${articlesJson};
 `;
+  
   fs.writeFileSync(ARTICLES_DATA_TS, content, 'utf-8');
+  console.log(`✅ 已更新 articlesData.ts，共 ${articles.length} 篇文章`);
 }
 
 function loadArticlesFromTs(): Article[] {
@@ -332,46 +385,55 @@ async function main(): Promise<number> {
       continue;
     }
     
+    console.log(`\n========================================`);
     console.log(`开始处理：${pdfFile}`);
+    console.log(`========================================\n`);
     
     const pdfPath = path.join(PDFS_TO_PROCESS_DIR, pdfFile);
     
-    // 提取 PDF 文本
-    const pdfText = await readPdfText(pdfPath);
-    if (!pdfText) {
-      console.log(`警告：PDF 提取文本为空，跳过：${pdfFile}`);
-      continue;
-    }
-    
-    // 调用 DeepSeek API
-    const extracted = await deepseekExtractJson(pdfText, apiKey);
-    
-    // 移动 PDF 到 public/pdfs
-    let targetPdfPath = path.join(PUBLISHED_PDFS_DIR, pdfFile);
-    if (fs.existsSync(targetPdfPath)) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const ext = path.extname(pdfFile);
-      const base = path.basename(pdfFile, ext);
-      targetPdfPath = path.join(PUBLISHED_PDFS_DIR, `${base}-${timestamp}${ext}`);
-    }
-    
-    fs.renameSync(pdfPath, targetPdfPath);
-    const pdfRelUrl = `pdfs/${path.basename(targetPdfPath)}`;
-    
-    // 生成日期和 slug
-    const dateStr = new Date().toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '年').replace(/年(\d+)年/, '年$1月') + '日';
-    
-    const slug = slugify(extracted.title);
-    const postFilename = `${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${slug}.html`;
-    const postPath = path.join(POSTS_DIR, postFilename);
-    const postRelUrl = `posts/${postFilename}`;
-    
-    // 生成 HTML（简化版，可以后续完善）
-    const postHtml = `<!DOCTYPE html>
+    try {
+      // 提取 PDF 文本
+      console.log('步骤 1/5: 提取 PDF 文本...');
+      const pdfText = await readPdfText(pdfPath);
+      if (!pdfText) {
+        console.log(`⚠️  警告：PDF 提取文本为空，跳过：${pdfFile}`);
+        continue;
+      }
+      console.log(`✅ 提取成功，文本长度: ${pdfText.length} 字符`);
+      
+      // 调用 DeepSeek API
+      console.log('\n步骤 2/5: 调用 DeepSeek API 分析内容...');
+      const extracted = await deepseekExtractJson(pdfText, apiKey);
+      
+      // 移动 PDF 到 public/pdfs
+      console.log('\n步骤 3/5: 移动 PDF 到发布目录...');
+      let targetPdfPath = path.join(PUBLISHED_PDFS_DIR, pdfFile);
+      if (fs.existsSync(targetPdfPath)) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const ext = path.extname(pdfFile);
+        const base = path.basename(pdfFile, ext);
+        targetPdfPath = path.join(PUBLISHED_PDFS_DIR, `${base}-${timestamp}${ext}`);
+      }
+      
+      fs.renameSync(pdfPath, targetPdfPath);
+      const pdfRelUrl = `pdfs/${path.basename(targetPdfPath)}`;
+      console.log(`✅ PDF 已移动到: ${pdfRelUrl}`);
+      
+      // 生成日期和 slug
+      console.log('\n步骤 4/5: 生成文章数据...');
+      const dateStr = new Date().toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '年').replace(/年(\d+)年/, '年$1月') + '日';
+      
+      const slug = slugify(extracted.title);
+      const postFilename = `${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${slug}.html`;
+      const postPath = path.join(POSTS_DIR, postFilename);
+      const postRelUrl = `posts/${postFilename}`;
+      
+      // 生成 HTML
+      const postHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -387,29 +449,41 @@ async function main(): Promise<number> {
   <div>${renderSummaryAsHtmlList(extracted.expert_commentary)}</div>
 </body>
 </html>`;
-    
-    fs.writeFileSync(postPath, postHtml, 'utf-8');
-    
-    // 更新文章数据
-    const fileSize = humanFileSize(fs.statSync(targetPdfPath).size);
-    const coreViewpointsHtml = renderSummaryAsHtmlList(extracted.summary);
-    const commentsHtml = renderSummaryAsHtmlList(extracted.expert_commentary);
-    
-    articles = upsertArticleEntry(articles, {
-      title: extracted.title,
-      dateStr,
-      coreViewpointsHtml,
-      commentsHtml,
-      pdfUrl: pdfRelUrl,
-      fileSize,
-      postUrl: postRelUrl
-    });
-    
-    processed.push(pdfFile);
-    processedSet.add(pdfFile);
-    
-    anyChanged = true;
-    console.log(`已发布：${postRelUrl} （PDF：${pdfRelUrl}）`);
+      
+      fs.writeFileSync(postPath, postHtml, 'utf-8');
+      console.log(`✅ 文章详情页: ${postRelUrl}`);
+      
+      // 更新文章数据
+      console.log('\n步骤 5/5: 更新文章列表...');
+      const fileSize = humanFileSize(fs.statSync(targetPdfPath).size);
+      const coreViewpointsHtml = renderSummaryAsHtmlList(extracted.summary);
+      const commentsHtml = renderSummaryAsHtmlList(extracted.expert_commentary);
+      
+      articles = upsertArticleEntry(articles, {
+        title: extracted.title,
+        dateStr,
+        coreViewpointsHtml,
+        commentsHtml,
+        pdfUrl: pdfRelUrl,
+        fileSize,
+        postUrl: postRelUrl
+      });
+      
+      processed.push(pdfFile);
+      processedSet.add(pdfFile);
+      
+      anyChanged = true;
+      console.log(`\n✅ 处理完成！`);
+      console.log(`   标题: ${extracted.title}`);
+      console.log(`   PDF: ${pdfRelUrl}`);
+      console.log(`   文章: ${postRelUrl}`);
+      
+    } catch (error) {
+      console.error(`\n❌ 处理 ${pdfFile} 时出错:`);
+      console.error(error);
+      console.error('\n跳过此文件，继续处理下一个...\n');
+      continue;
+    }
   }
   
   if (anyChanged) {
