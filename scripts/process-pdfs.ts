@@ -133,8 +133,12 @@ async function readPdfText(pdfPath: string, maxPages: number = 10, maxChars: num
 // ==================== DeepSeek API ====================
 async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<ExtractedPost> {
   if (!apiKey) {
+    console.error('❌ API Key 未设置！');
     throw new Error('缺少环境变量 DEEPSEEK_API_KEY');
   }
+
+  // 打印 API Key 前 5 位（隐私安全）
+  console.log('🔑 Current API Key starts with:', apiKey.substring(0, 5) + '...');
 
   const system = 
     '你是一名深度理解供应链管理、物流技术、全球贸易合规以及 AI 在供应链应用的资深供应链顾问。' +
@@ -171,6 +175,8 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
     `${pdfText}\n` +
     '-----\n';
 
+  console.log('📤 正在调用 DeepSeek API...');
+  
   let response;
   try {
     response = await axios.post(
@@ -193,25 +199,45 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
         timeout: 120000
       }
     );
+    console.log('✅ API 调用成功');
   } catch (error: any) {
-    console.error('DeepSeek API 调用失败:', error.message);
+    console.error('❌ DeepSeek API 调用失败！');
+    console.error('错误消息:', error.message);
+    
     if (error.response) {
-      console.error('响应状态:', error.response.status);
-      console.error('响应数据:', JSON.stringify(error.response.data, null, 2));
+      console.error('📊 响应状态码:', error.response.status);
+      console.error('📄 响应数据:');
+      console.error(JSON.stringify(error.response.data, null, 2));
+    } else if (error.request) {
+      console.error('📡 请求已发送但没有收到响应');
+      console.error('请求详情:', error.request);
+    } else {
+      console.error('⚙️  请求配置错误:', error.message);
     }
+    
     throw error;
   }
 
   const content = response.data?.choices?.[0]?.message?.content;
   if (!content) {
-    console.error('DeepSeek 返回数据:', JSON.stringify(response.data, null, 2));
+    console.error('❌ DeepSeek 返回为空！');
+    console.error('完整响应数据:', JSON.stringify(response.data, null, 2));
     throw new Error('DeepSeek 返回为空');
   }
 
-  console.log('DeepSeek 原始返回（前 500 字符）:', content.substring(0, 500));
+  console.log('📥 DeepSeek 原始返回（前 500 字符）:');
+  console.log(content.substring(0, 500));
+  console.log('...');
 
   // 清理和提取 JSON
   let cleanedContent = content.trim();
+  
+  // 检查是否为空
+  if (!cleanedContent) {
+    console.error('❌ 清理后的内容为空！');
+    console.error('原始内容:', content);
+    throw new Error('DeepSeek 返回内容为空');
+  }
   
   // 尝试提取 ```json 代码块
   const jsonBlockMatch = cleanedContent.match(/```json\s*([\s\S]*?)\s*```/);
@@ -236,14 +262,29 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
   const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     cleanedContent = jsonMatch[0];
+  } else {
+    console.error('❌ 无法找到 JSON 对象！');
+    console.error('清理后的内容:', cleanedContent);
+    throw new Error('无法从返回内容中提取 JSON 对象');
   }
+  
+  // 最终检查：确保不为空
+  if (!cleanedContent || cleanedContent.length < 10) {
+    console.error('❌ 提取的 JSON 内容太短或为空！');
+    console.error('提取的内容:', cleanedContent);
+    throw new Error('提取的 JSON 内容无效');
+  }
+  
+  console.log('📝 准备解析的 JSON（前 200 字符）:');
+  console.log(cleanedContent.substring(0, 200));
 
   let obj: any;
   try {
     obj = JSON.parse(cleanedContent);
   } catch (e) {
-    console.error('JSON 解析失败！');
-    console.error('清理后的内容:', cleanedContent);
+    console.error('❌ JSON 解析失败！');
+    console.error('完整的清理后内容:');
+    console.error(cleanedContent);
     console.error('解析错误:', e);
     throw new Error(`JSON 解析失败: ${e instanceof Error ? e.message : String(e)}`);
   }
