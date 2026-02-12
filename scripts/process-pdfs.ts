@@ -390,7 +390,19 @@ async function main(): Promise<number> {
   // 读取已处理记录
   let processed: string[] = [];
   if (fs.existsSync(PROCESSED_LEDGER_PATH)) {
-    processed = JSON.parse(fs.readFileSync(PROCESSED_LEDGER_PATH, 'utf-8'));
+    try {
+      const content = fs.readFileSync(PROCESSED_LEDGER_PATH, 'utf-8').trim();
+      if (content && content.startsWith('[')) {
+        processed = JSON.parse(content);
+      } else {
+        console.warn('⚠️  processed_pdfs.json 格式不正确，将重置为空数组');
+        processed = [];
+      }
+    } catch (e) {
+      console.error('⚠️  读取 processed_pdfs.json 失败，将重置为空数组');
+      console.error('错误:', e);
+      processed = [];
+    }
   }
   const processedSet = new Set(processed);
   
