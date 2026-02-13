@@ -64,9 +64,9 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           echo "=== 添加文件到 Git ==="
-          git add src/data/articlesData.ts posts/ public/pdfs/ data/processed_pdfs.json pdfs_to_process/
+          git add src/data/articlesData.ts posts/ public/pdfs/ data/processed_pdfs.json pdfs_to_process/ package-lock.json
           echo "=== 提交更改 ==="
-          git commit -m "chore: 自动发布每日洞察 [$(date +'%Y-%m-%d')]"
+          git commit -m "chore: 自动发布每日洞察 [$(date +'%Y-%m-%d')]" || echo "没有需要提交的更改"
           echo "=== 推送到远程 ==="
           git push
           echo "✅ 推送成功"

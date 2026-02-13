@@ -114,32 +114,43 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           </div>
         </div>
         
-        {/* 下载按钮 */}
-        <a
-          href={article.pdfUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            padding: '10px 20px',
-            background: 'rgba(45, 52, 54, 0.85)',
-            color: '#ffffff',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            fontWeight: '500',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.2s ease',
-            display: 'inline-block'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(45, 52, 54, 1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(45, 52, 54, 0.85)';
-          }}
-        >
-          下载报告
-        </a>
+        {/* 下载按钮和文件大小 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+          <a
+            href={article.pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: '10px 20px',
+              background: 'rgba(45, 52, 54, 0.85)',
+              color: '#ffffff',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s ease',
+              display: 'inline-block'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(45, 52, 54, 1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(45, 52, 54, 0.85)';
+            }}
+          >
+            下载报告
+          </a>
+          
+          {/* 文件大小 - 放在按钮下方 */}
+          <span style={{
+            fontSize: '0.75rem',
+            color: '#a0aec0',
+            fontWeight: '400'
+          }}>
+            {article.fileSize}
+          </span>
+        </div>
       </div>
 
       {/* 核心观点 */}
@@ -180,18 +191,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           }}
           dangerouslySetInnerHTML={{ __html: article.comments }}
         />
-      </div>
-
-      {/* 文件大小提示 */}
-      <div style={{
-        marginTop: '16px',
-        fontSize: '0.85rem',
-        color: '#a0aec0',
-        textAlign: 'right',
-        position: 'relative',
-        zIndex: 1
-      }}>
-        文件大小: {article.fileSize}
       </div>
     </div>
   );

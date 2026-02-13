@@ -31,7 +31,7 @@ const Hero: React.FC = () => {
         color: '#95A5A6',
         fontWeight: '400'
       }}>
-        每周一到周五更新
+        每周一到周五早上 6 点更新
       </p>
     </div>
   );
