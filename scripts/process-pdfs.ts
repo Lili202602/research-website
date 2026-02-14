@@ -28,6 +28,7 @@ interface ExtractedPost {
   title: string;
   summary: string;
   expert_commentary: string;
+  industry_tags?: string[];
 }
 
 interface Article {
@@ -40,6 +41,7 @@ interface Article {
   fileSize: string;
   postUrl: string;
   tags?: string[];
+  industry_tags?: string[];
 }
 
 // ==================== 工具函数 ====================
@@ -151,10 +153,10 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
     '要求：\n' +
     '1) title：报告/文章标题（中文优先，尽量完整）\n' +
     '2) summary：核心摘要（5-10 条要点，必须严格遵守以下格式）：\n' +
-    '   每条要点格式：【**总结词/短句**】：紧接着展开 1-2 句具体的细节描述。\n' +
+    '   每条要点格式：**总结词/短句**：紧接着展开 1-2 句具体的细节描述。\n' +
     '   示例：\n' +
-    '   【**物流降本**】：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。\n' +
-    '   【**合规风险**】：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。\n' +
+    '   **物流降本**：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。\n' +
+    '   **合规风险**：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。\n' +
     '   注意：总结词必须用 **加粗标记** 包裹，每条要点独立一行，用换行分隔。\n' +
     '3) expert_commentary：专家点评（资深供应链顾问视角，聚焦供应链管理、物流技术、贸易合规或 AI/数字化在供应链中的应用，' +
     '结合报告结论说明对行业从业者在决策、运营优化和风险管理上的具体影响，并给出可执行建议，300-600 字）：\n' +
@@ -163,12 +165,14 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
     '   示例：\n' +
     '   【**物流降本**】：通过引入 AI 路径规划算法，预计可降低 15% 的末端配送成本。\n' +
     '   【**合规风险**】：针对 2026 年新的贸易法案，报告提示了电子原件进口的准入限制。\n' +
-    '   注意：总结词必须用 **加粗标记** 包裹，每条洞察独立一段，用换行分隔。\n\n' +
+    '   注意：总结词必须用 **加粗标记** 包裹，每条洞察独立一段，用换行分隔。\n' +
+    '4) industry_tags：行业标签（字符串数组，1-3个关键词，识别 PDF 所属的主要行业，如：["零售", "电商", "物流"] 或 ["制造业", "汽车"] 等）\n\n' +
     '输出 JSON 示例：\n' +
     '{\n' +
     '  "title": "...",\n' +
-    '  "summary": "【**总结词1**】：描述1\\n【**总结词2**】：描述2\\n...",\n' +
-    '  "expert_commentary": "【**洞察1**】：描述1\\n\\n【**洞察2**】：描述2\\n\\n..."\n' +
+    '  "summary": "**总结词1**：描述1\\n**总结词2**：描述2\\n...",\n' +
+    '  "expert_commentary": "【**洞察1**】：描述1\\n\\n【**洞察2**】：描述2\\n\\n...",\n' +
+    '  "industry_tags": ["行业1", "行业2"]\n' +
     '}\n\n' +
     'PDF 文本如下（可能不完整）：\n' +
     '-----\n' +
@@ -292,6 +296,7 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
   const title = (obj.title || '').trim();
   const summary = (obj.summary || '').trim();
   const expert = (obj.expert_commentary || '').trim();
+  const industryTags = Array.isArray(obj.industry_tags) ? obj.industry_tags.filter((tag: any) => typeof tag === 'string').slice(0, 3) : undefined;
 
   if (!title || !summary || !expert) {
     console.error('解析的对象:', JSON.stringify(obj, null, 2));
@@ -302,8 +307,11 @@ async function deepseekExtractJson(pdfText: string, apiKey: string): Promise<Ext
   console.log('标题:', title);
   console.log('摘要长度:', summary.length);
   console.log('点评长度:', expert.length);
+  if (industryTags && industryTags.length > 0) {
+    console.log('行业标签:', industryTags.join(', '));
+  }
 
-  return { title, summary, expert_commentary: expert };
+  return { title, summary, expert_commentary: expert, industry_tags: industryTags };
 }
 
 // ==================== 文章数据更新 ====================
@@ -346,6 +354,7 @@ function upsertArticleEntry(
     pdfUrl: string;
     fileSize: string;
     postUrl: string;
+    industryTags?: string[];
   }
 ): Article[] {
   const maxId = articles.reduce((max, a) => Math.max(max, a.id || 0), 0);
@@ -368,7 +377,8 @@ function upsertArticleEntry(
     pdfUrl: data.pdfUrl,
     fileSize: data.fileSize,
     postUrl: data.postUrl,
-    tags: ['供应链', 'AI洞察']
+    tags: ['供应链', 'AI洞察'],
+    industry_tags: data.industryTags
   };
   
   return [newArticle, ...articles];
@@ -519,7 +529,8 @@ async function main(): Promise<number> {
         commentsHtml,
         pdfUrl: pdfRelUrl,
         fileSize,
-        postUrl: postRelUrl
+        postUrl: postRelUrl,
+        industryTags: extracted.industry_tags
       });
       
       processed.push(pdfFile);

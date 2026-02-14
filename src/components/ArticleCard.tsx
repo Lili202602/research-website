@@ -11,13 +11,11 @@ interface ArticleCardProps {
     fileSize: string;
     postUrl?: string;
     tags?: string[];
+    industry_tags?: string[];
   };
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
-  // 提取标签（如果没有则使用默认标签）
-  const tags = article.tags || ['供应链', 'AI洞察'];
-
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.85)',
@@ -89,29 +87,31 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           <div style={{
             fontSize: '0.85rem',
             color: '#95A5A6',
-            marginBottom: '12px'
+            marginBottom: '8px'
           }}>
             {article.date}
           </div>
           
-          {/* 标签 */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {tags.map((tag, index) => (
-              <span
-                key={index}
-                style={{
-                  padding: '4px 12px',
-                  background: 'rgba(45, 52, 54, 0.08)',
-                  borderRadius: '6px',
-                  fontSize: '0.8rem',
-                  color: '#636E72',
-                  fontWeight: '500'
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {/* 行业标签 */}
+          {article.industry_tags && article.industry_tags.length > 0 && (
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              {article.industry_tags.map((tag, index) => (
+                <span
+                  key={index}
+                  style={{
+                    padding: '3px 10px',
+                    background: 'rgba(149, 165, 166, 0.15)',
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    color: '#7F8C8D',
+                    fontWeight: '400'
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* 下载按钮和文件大小 */}
